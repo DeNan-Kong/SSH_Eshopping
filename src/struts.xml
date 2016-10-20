@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC  
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"  
+    "http://struts.apache.org/dtds/struts-2.3.dtd">  
+  
+<struts>
+	<constant name="struts.devMode" value="false" /> 
+	<package name="shop" extends="json-default"><!-- json-default继承了struts-default，
+													interceptor拦截器在struts-default内 -->
+	
+		<global-results>
+			<result name="aindex">/WEB-INF/main/aindex.jsp</result>
+			<result name="index">/index.jsp</result>
+			<result name="error">/error.jsp</result>
+			<result name="stream" type="stream">
+				<param name="inputName">inputStream</param>
+			</result>
+		</global-results>
+
+		<!-- class对应的是Spring中配置该Action的id值，因为要交给Spring管理 -->
+		<action name="category_*" class="categoryAction" method="{1}">
+			<!-- 必须要先添加json包，然后上面继承json-default -->
+			<result name="jsonMap" type="json">
+				<!-- 要转换成json对象的数据 -->
+				<param name="root">pageMap</param>
+				<!-- 配置黑名单，过滤不需要的选项 ，支持正则表达式
+				 \d：一个数字      +:一个或多个     ?:0或1   *：1或多     [ABC]：自定义类型们必须是ABC中的一个  .：任意字符
+				{total:3,rows:[{account:{id:2,login:"user",name:"客服A",pass:"user"},hot:true,id:3,…}]}
+				-->
+				<param name="excludeProperties"><!-- rows[0].account.pass-->					
+					rows\[\d+\]\.account\.pass,
+					rows\[\d+\]\.account\.name
+				</param>
+			</result>
+			
+			<result name="jsonList" type="json">
+				<param name="root">jsonList</param>
+				<param name="excludeProperties">
+					rows\[\d+\]\.account
+				</param>
+			</result>
+			
+			
+		</action>
+		
+		<action name="account_*" class="accountAction" method="{1}">
+			<result name="jsonList" type="json">
+				<param name="root">jsonList</param>
+				<param name="excludeProperties">
+					<!-- [0].pass, [1].pass -->
+					\[\d+\]\.pass,\[\d+\]\.name
+				</param>
+			</result>
+		</action>
+		
+		<action name="product_*" class="productAction" method="{1}">
+			<result name="jsonMap" type="json">
+				<param name="root">pageMap</param>
+				<param name="excludeProperties">
+					<!-- rows[0].category.account -->
+					rows\[\d+\]\.category\.account
+					
+				</param>
+			</result>			
+			<result name="detail">/detail.jsp</result>
+		</action>
+			
+		<action name="sorder_*" class="sorderAction" method="{1}">
+			<result name="showCart">/user/showCart.jsp</result>
+			<result name="jsonList" type="json"></result>
+		</action>	
+		
+		<action name="forder_*" class="forderAction" method="{1}">
+			<result name="bank" type="redirect">/user/bank.jsp</result>
+		</action>
+		
+		<action name="user_*" class="userAction" method="{1}">
+			<result name="login" type="redirect">/ulogin.jsp</result>
+			<result name="goURL" type="redirect">
+				${#session.goURL} <!-- 从值栈中取出session中的数据 -->
+			</result>
+		</action>		
+		
+		<!-- 用来完成系统 请求转发的action,所有的请求都交给execute-->
+		<action name="send_*_*" class="sendAction">
+			<result name="send">/WEB-INF/{1}/{2}.jsp</result>
+		</action>
+	</package> 
+    
+  
+</struts> 
+  
